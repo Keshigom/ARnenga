@@ -87,7 +87,7 @@ function initScene() {
     var marker1 = new THREE.Group();
     var controls = new THREEx.ArMarkerControls(context, marker1, {
         type: "pattern",
-        patternUrl: "assets/markers/hiro.patt",
+        patternUrl: "assets/markers/qr.patt",
     });
 
     //シーンにマーカーを追加
@@ -110,7 +110,7 @@ function initScene() {
     var meshFuji = new THREE.Mesh(geometry, materia1);
     meshFuji.overdraw = true; //CHECK
     meshFuji.name = "fuji";
-    meshFuji.position.set(0, 0.5, 0.5);
+    meshFuji.position.set(0, 0.5, -1);
     marker1.add(meshFuji);
 
     //頂上部分
@@ -119,11 +119,23 @@ function initScene() {
         { color: 0xFFFFFF }
     );
     var meshFujiTop = new THREE.Mesh(geometry, materia1);
-    meshFujiTop.position.set(0, 0.5, 0.5);
+    meshFujiTop.position.set(0, 0.5, -1);
     marker1.add(meshFujiTop);
 
+    //モデル２　メッセージ
+    const textureMessage = textureLoader.load("assets/textures/message.png");
+    var mat = new THREE.MeshBasicMaterial({
+        map: textureMessage
+    });
+    geometry = new THREE.PlaneGeometry(1, 1);
+    const plane = new THREE.Mesh(geometry, mat);
+    plane.position.set(0, 0.3, 0.5);
+    plane.rotation.set(-Math.PI / 2, 0, 0);
+    marker1.add(plane);
 
-    //モデル２　VRM
+
+
+    //モデル3　VRM
 
     //アニメーション読み込み
     //別のGLTFモデルから流用
@@ -188,6 +200,7 @@ function initScene() {
 
         vrm.scene.position.set(0, 0, 0);
         vrm.scene.scale.set(1, 1, 1);
+        vrm.scene.rotation.set(0, Math.PI, 0);
         marker1.add(vrm.scene);
 
         //アニメーションの紐付け
