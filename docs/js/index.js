@@ -107,7 +107,8 @@ function initScene() {
     });
 
     //メッシュの生成
-    var meshFuji = new THREE.Mesh(geometry, materia1);
+    //グローバル変数
+    meshFuji = new THREE.Mesh(geometry, materia1);
     meshFuji.overdraw = true; //CHECK
     meshFuji.name = "fuji";
     meshFuji.position.set(0, 0.5, -1);
@@ -129,7 +130,8 @@ function initScene() {
     });
     geometry = new THREE.PlaneGeometry(1, 1);
     const plane = new THREE.Mesh(geometry, mat);
-    plane.position.set(0, 0.3, 0.5);
+    plane.overdraw = true; //CHECK
+    plane.position.set(0, 0.3, 0.7);
     plane.rotation.set(-Math.PI / 2, 0, 0);
     marker1.add(plane);
 
@@ -143,7 +145,7 @@ function initScene() {
     const animationFiles = ['assets/motions/wave.gltf'];
     const animationLoader = new THREE.GLTFLoader();
     for (let i = 0; i < animationFiles.length; ++i) {
-        animationLoader.load(animationFiles[i], function () { alert('Animation ' + i + ' loaded.') });
+        animationLoader.load(animationFiles[i], function () { console.log('Animation ' + i + ' loaded.') });
     }
 
     let loadModelIndex = 0;
@@ -222,6 +224,71 @@ function initScene() {
 }
 
 //---------------------------------------------------------------------
+//　Tween アニメーション
+//---------------------------------------------------------------------
+
+// meshFuji 
+var twIni1 = { posZ: 0, rotY: 0 };                      // 初期パラメータ
+var twVal1 = { posZ: 0, rotY: 0 };                      // tweenによって更新されるパラメータ
+var twFor1 = { posZ: 0, rotY: 4 * Math.PI };              // ターゲットパラメータ
+// 「行き」のアニメーション
+function tween1() {
+    var tween = new TWEEN.Tween(twVal1)                 // tweenオブジェクトを作成
+        .to(twFor1, 2000)                                   // ターゲットと到達時間
+        .easing(TWEEN.Easing.Back.Out)                      // イージング
+        .onUpdate(function () {                              // フレーム更新時の処理
+            meshFuji.rotation.y = twVal1.rotY;                   // 回転を変更
+        })
+        .onComplete(function () {                            // アニメーション完了時の処理
+            tween1_back();                                    // 「帰り」のアニメーションを実行
+        })
+        .delay(0)                                           // 開始までの遅延時間
+        .start();                                           // tweenアニメーション開始
+}
+// 「帰り」のアニメーション    
+function tween1_back() {
+    var tween = new TWEEN.Tween(twVal1)
+        .to(twIni1, 2000)                                   // ターゲットを初期パラメータに設定
+        .easing(TWEEN.Easing.Back.InOut)
+        .onUpdate(function () {
+            meshFuji.rotation.y = twVal1.rotY;
+        })
+        .onComplete(function () {
+            // なにもしない
+        })
+        .delay(100)
+        .start();
+}
+
+//===================================================================
+// クリックイベント
+//===================================================================
+window.addEventListener("mousedown", function (ret) {
+    var mouseX = ret.clientX;                           // マウスのx座標
+    var mouseY = ret.clientY;                           // マウスのy座標
+    mouseX = (mouseX / window.innerWidth) * 2 - 1;    // -1 ～ +1 に正規化されたx座標
+    mouseY = -(mouseY / window.innerHeight) * 2 + 1;    // -1 ～ +1 に正規化されたy座標
+    var pos = new THREE.Vector3(mouseX, mouseY, 1);     // マウスベクトル
+    pos.unproject(camera);                              // スクリーン座標系をカメラ座標系に変換
+    // レイキャスタを作成（始点, 向きのベクトル）
+    var ray = new THREE.Raycaster(camera.position, pos.sub(camera.position).normalize());
+    var obj = ray.intersectObjects(scene.children, true);   // レイと交差したオブジェクトの取得
+    if (obj.length > 0) {                                // 交差したオブジェクトがあれば
+        picked(obj[0].object.name);                       // ピックされた対象に応じた処理を実行
+    }
+});
+// ピックされた対象に応じた処理
+function picked(objName) {
+    switch (objName) {
+        case "fuji":
+            tween1();
+            break;
+        default:
+            break;
+    }
+}
+
+//---------------------------------------------------------------------
 //　描画
 //---------------------------------------------------------------------
 
@@ -241,4 +308,4 @@ function renderScene() {
     renderer.render(scene, camera);                     // レンダリング実施
 
 }
-renderScene();    
+renderScene();
